@@ -1,0 +1,288 @@
+From 9b8548c539d6b10c93b7bc359a622bcc703f6eff Mon Sep 17 00:00:00 2001
+From: jatin-rathee <jatinrathee2018@gmail.com>
+Date: Thu, 18 Jun 2020 15:53:24 +0530
+Subject: [PATCH] made changes
+
+---
+ .babelrc        |   2 +-
+ README.markdown |  17 ++++--
+ server.js       | 155 ++++++++++++++++++++++++++----------------------
+ 3 files changed, 95 insertions(+), 79 deletions(-)
+
+diff --git a/.babelrc b/.babelrc
+index 7bc1042..b7191e7 100644
+--- a/.babelrc
++++ b/.babelrc
+@@ -1 +1 @@
+-{ "presets": ["@babel/preset-env"] }
+\ No newline at end of file
++{ "presets": ["@babel/preset-env"] }
+diff --git a/README.markdown b/README.markdown
+index a440233..0b27644 100644
+--- a/README.markdown
++++ b/README.markdown
+@@ -6,7 +6,6 @@
+   <img src="https://s3-ap-southeast-2.amazonaws.com/insidesherpa-assets/yc/workatastartup_logo_orange-c2a27f6374f9395166ee9906e2e0873af835b3c6132ae6aa0543582298567041.svg"></a>
+ </p>
+ 
+-
+ <p align='center'> 
+   <b><a href="#task"> Task Overview</a></b>
+   | 
+@@ -18,8 +17,8 @@
+            
+ </p>
+ 
++# Introduction
+ 
+-# Introduction 
+ <p> 
+ <b> College Students: 
+   Learn how to work at a Y Combinator startup </b>
+@@ -36,6 +35,7 @@ In the backend, what you need to do is write a few functions that take the user
+ <br><br>
+ 
+ Acceptance Criteria
++
+ <ul>
+   <li>When a user moves a card from one swimlane to another, the database updates the position of the client accordingly.</li>
+   <li>When a user rearranges a card in the same swimlane, the database updates the position of the client accordingly.</li>
+@@ -67,18 +67,22 @@ Start the server by running:
+ This command will run the Express server on localhost:3001
+ 
+ Try the API by running:
++
+ ### curl -X GET http://localhost:3001/api/v1/clients
++
+ ### curl -X GET http://localhost:3001/api/v1/clients?status=backlog
++
+ ### curl -X GET http://localhost:3001/api/v1/clients/1
+-### curl -X PUT http://localhost:3001/api/v1/clients/1 -H "Content-Type: application/json" -d '{"status":"in-progress", "priority": 6}'
+ 
++### curl -X PUT http://localhost:3001/api/v1/clients/1 -H "Content-Type: application/json" -d '{"status":"in-progress", "priority": 6}'
+ 
+ For this task, you only need to update the API for updating client detail.
+ 
+ Valid status:
+-- backlog
+-- in-progress
+-- complete
++
++-   backlog
++-   in-progress
++-   complete
+ 
+ `client.priority` should be unique per status. Ordered from 1 to x where priority 1 means most important client.
+ 
+@@ -97,6 +101,7 @@ Should insert the client at the right priority and reorder the priority in clien
+ ### curl -X PUT http://localhost:3001/api/v1/clients/1 -H "Content-Type: application/json" -d '{"status":"complete", "priority": 3}'
+ 
+ ## Additional Resources
++
+ Node JS: https://nodejs.org/en/
+ Express: https://expressjs.com
+ better-sqlite3: https://github.com/JoshuaWise/better-sqlite3/blob/HEAD/docs/api.md
+diff --git a/server.js b/server.js
+index 7ba16d7..88147a6 100644
+--- a/server.js
++++ b/server.js
+@@ -6,7 +6,9 @@ const app = express();
+ app.use(express.json());
+ 
+ app.get('/', (req, res) => {
+-  return res.status(200).send({'message': 'SHIPTIVITY API. Read documentation to see API docs'});
++	return res.status(200).send({
++		message: 'SHIPTIVITY API. Read documentation to see API docs',
++	});
+ });
+ 
+ // We are keeping one connection alive for the rest of the life application for simplicity
+@@ -21,70 +23,79 @@ process.on('SIGINT', closeDb);
+  * Validate id input
+  * @param {any} id
+  */
+-const validateId = (id) => {
+-  if (Number.isNaN(id)) {
+-    return {
+-      valid: false,
+-      messageObj: {
+-      'message': 'Invalid id provided.',
+-      'long_message': 'Id can only be integer.',
+-      },
+-    };
+-  }
+-  const client = db.prepare('select * from clients where id = ? limit 1').get(id);
+-  if (!client) {
+-    return {
+-      valid: false,
+-      messageObj: {
+-      'message': 'Invalid id provided.',
+-      'long_message': 'Cannot find client with that id.',
+-      },
+-    };
+-  }
+-  return {
+-    valid: true,
+-  };
+-}
++const validateId = id => {
++	if (Number.isNaN(id)) {
++		return {
++			valid: false,
++			messageObj: {
++				message: 'Invalid id provided.',
++				long_message: 'Id can only be integer.',
++			},
++		};
++	}
++	const client = db
++		.prepare('select * from clients where id = ? limit 1')
++		.get(id);
++	if (!client) {
++		return {
++			valid: false,
++			messageObj: {
++				message: 'Invalid id provided.',
++				long_message: 'Cannot find client with that id.',
++			},
++		};
++	}
++	return {
++		valid: true,
++	};
++};
+ 
+ /**
+  * Validate priority input
+  * @param {any} priority
+  */
+-const validatePriority = (priority) => {
+-  if (Number.isNaN(priority)) {
+-    return {
+-      valid: false,
+-      messageObj: {
+-      'message': 'Invalid priority provided.',
+-      'long_message': 'Priority can only be positive integer.',
+-      },
+-    };
+-  }
+-  return {
+-    valid: true,
+-  }
+-}
++const validatePriority = priority => {
++	if (Number.isNaN(priority)) {
++		return {
++			valid: false,
++			messageObj: {
++				message: 'Invalid priority provided.',
++				long_message: 'Priority can only be positive integer.',
++			},
++		};
++	}
++	return {
++		valid: true,
++	};
++};
+ 
+ /**
+  * Get all of the clients. Optional filter 'status'
+  * GET /api/v1/clients?status={status} - list all clients, optional parameter status: 'backlog' | 'in-progress' | 'complete'
+  */
+ app.get('/api/v1/clients', (req, res) => {
+-  const status = req.query.status;
+-  if (status) {
+-    // status can only be either 'backlog' | 'in-progress' | 'complete'
+-    if (status !== 'backlog' && status !== 'in-progress' && status !== 'complete') {
+-      return res.status(400).send({
+-        'message': 'Invalid status provided.',
+-        'long_message': 'Status can only be one of the following: [backlog | in-progress | complete].',
+-      });
+-    }
+-    const clients = db.prepare('select * from clients where status = ?').all(status);
+-    return res.status(200).send(clients);
+-  }
+-  const statement = db.prepare('select * from clients');
+-  const clients = statement.all();
+-  return res.status(200).send(clients);
++	const status = req.query.status;
++	if (status) {
++		// status can only be either 'backlog' | 'in-progress' | 'complete'
++		if (
++			status !== 'backlog' &&
++			status !== 'in-progress' &&
++			status !== 'complete'
++		) {
++			return res.status(400).send({
++				message: 'Invalid status provided.',
++				long_message:
++					'Status can only be one of the following: [backlog | in-progress | complete].',
++			});
++		}
++		const clients = db
++			.prepare('select * from clients where status = ?')
++			.all(status);
++		return res.status(200).send(clients);
++	}
++	const statement = db.prepare('select * from clients');
++	const clients = statement.all();
++	return res.status(200).send(clients);
+ });
+ 
+ /**
+@@ -92,12 +103,14 @@ app.get('/api/v1/clients', (req, res) => {
+  * GET /api/v1/clients/{client_id} - get client by id
+  */
+ app.get('/api/v1/clients/:id', (req, res) => {
+-  const id = parseInt(req.params.id , 10);
+-  const { valid, messageObj } = validateId(id);
+-  if (!valid) {
+-    res.status(400).send(messageObj);
+-  }
+-  return res.status(200).send(db.prepare('select * from clients where id = ?').get(id));
++	const id = parseInt(req.params.id, 10);
++	const { valid, messageObj } = validateId(id);
++	if (!valid) {
++		res.status(400).send(messageObj);
++	}
++	return res
++		.status(200)
++		.send(db.prepare('select * from clients where id = ?').get(id));
+ });
+ 
+ /**
+@@ -115,21 +128,19 @@ app.get('/api/v1/clients/:id', (req, res) => {
+  *
+  */
+ app.put('/api/v1/clients/:id', (req, res) => {
+-  const id = parseInt(req.params.id , 10);
+-  const { valid, messageObj } = validateId(id);
+-  if (!valid) {
+-    res.status(400).send(messageObj);
+-  }
++	const id = parseInt(req.params.id, 10);
++	const { valid, messageObj } = validateId(id);
++	if (!valid) {
++		res.status(400).send(messageObj);
++	}
+ 
+-  let { status, priority } = req.body;
+-  let clients = db.prepare('select * from clients').all();
+-  const client = clients.find(client => client.id === id);
++	let { status, priority } = req.body;
++	let clients = db.prepare('select * from clients').all();
++	const client = clients.find(client => client.id === id);
+ 
+-  /* ---------- Update code below ----------*/
++	/* ---------- Update code below ----------*/
+ 
+-
+-
+-  return res.status(200).send(clients);
++	return res.status(200).send(clients);
+ });
+ 
+ app.listen(3001);
+-- 
+2.17.1
+
